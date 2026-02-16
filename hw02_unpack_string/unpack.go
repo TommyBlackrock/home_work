@@ -19,6 +19,7 @@ func Unpack(inputStr string) (string, error) {
 	var prevRune rune
 	var hasPrev bool = false
 	var prevWasDigit bool = false
+	var isFirstChar bool = true
 
 	flushPrev := func() {
 		if hasPrev {
@@ -30,13 +31,17 @@ func Unpack(inputStr string) (string, error) {
 	for _, r := range inputStr {
 		if unicode.IsDigit(r) {
 
-			if !hasPrev {
-				prevWasDigit = false
-				continue
+			if isFirstChar {
+				return "", ErrInvalidString
 			}
 
 			if prevWasDigit {
 				return "", ErrInvalidString
+			}
+
+			if !hasPrev {
+				prevWasDigit = false
+				continue
 			}
 
 			count, err := strconv.Atoi(string(r))
@@ -61,7 +66,7 @@ func Unpack(inputStr string) (string, error) {
 		prevRune = r
 		hasPrev = true
 		prevWasDigit = false
-
+		isFirstChar = false
 	}
 	flushPrev()
 	return builder.String(), nil
