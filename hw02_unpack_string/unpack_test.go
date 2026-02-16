@@ -23,6 +23,19 @@ func TestUnpack(t *testing.T) {
 		// {input: `qwe\45`, expected: `qwe44444`},
 		// {input: `qwe\\5`, expected: `qwe\\\\\`},
 		// {input: `qwe\\\3`, expected: `qwe\3`},
+		// additional test cases
+		{input: "ф2", expected: "фф"},
+		{input: "я3", expected: "яяя"},
+		{input: "你2", expected: "你你"},
+		{input: "あ2", expected: "ああ"},
+		{input: "🙂2", expected: "🙂🙂"},
+		{input: "😎3", expected: "😎😎😎"},
+		{input: "😈0", expected: ""},
+		// extended test cases
+		{input: "!3", expected: "!!!"},
+		{input: ",2", expected: ",,"},
+		{input: "a!2", expected: "a!!"},
+		{input: ".0", expected: ""},
 	}
 
 	for _, tc := range tests {
@@ -35,7 +48,19 @@ func TestUnpack(t *testing.T) {
 }
 
 func TestUnpackInvalidString(t *testing.T) {
-	invalidStrings := []string{"3abc", "45", "aaa10b"}
+	invalidStrings := []string{
+		"3abc",
+		"45",
+		"aaa10b",
+		"a12", // две цифры подряд
+		"🙂34", // unicode + цифры подряд
+		"😈99", // emoji + цифры подряд
+
+		"1",   // одиночная цифра
+		"123", // только цифры
+		"00",  // только цифры
+		"a01", // число
+	}
 	for _, tc := range invalidStrings {
 		t.Run(tc, func(t *testing.T) {
 			_, err := Unpack(tc)
