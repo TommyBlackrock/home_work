@@ -17,9 +17,9 @@ func Unpack(inputStr string) (string, error) {
 	var builder strings.Builder
 
 	var prevRune rune
-	var hasPrev bool = false
-	var prevWasDigit bool = false
-	var isFirstChar bool = true
+	hasPrev := false
+	prevWasDigit := false
+	isFirstChar := true
 
 	flushPrev := func() {
 		if hasPrev {
