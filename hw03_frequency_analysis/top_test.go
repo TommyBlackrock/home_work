@@ -83,7 +83,6 @@ func TestTop10(t *testing.T) {
 }
 
 func TestTop10AdditionalCases(t *testing.T) {
-
 	t.Run("1 ties are sorted lexicographically", func(t *testing.T) {
 		require.Equal(t, []string{"alpha", "bravo", "charlie"}, Top10("charlie bravo alpha"))
 	})
@@ -113,8 +112,13 @@ func TestTop10AdditionalCases(t *testing.T) {
 	})
 
 	t.Run("6 deterministic on repeated calls with NATO Phonetic Alphabet words", func(t *testing.T) {
+		natoWords := strings.Join([]string{
+			"alpha bravo charlie delta echo foxtrot golf hotel india juliett kilo lima mike",
+			"november oscar papa quebec romeo sierra tango uniform victor whiskey x-ray yankee zulu",
+		}, " ")
+
 		input := strings.Join([]string{
-			"alpha bravo charlie delta echo foxtrot golf hotel india juliett kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey x-ray yankee zulu",
+			natoWords,
 			"alpha alpha bravo bravo bravo zulu zulu x-ray x-ray x-ray",
 		}, " ")
 
