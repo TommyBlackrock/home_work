@@ -1,6 +1,7 @@
 package hw03frequencyanalysis
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -78,5 +79,51 @@ func TestTop10(t *testing.T) {
 			}
 			require.Equal(t, expected, Top10(text))
 		}
+	})
+}
+
+func TestTop10AdditionalCases(t *testing.T) {
+	t.Run("1 ties are sorted lexicographically", func(t *testing.T) {
+		require.Equal(t, []string{"alpha", "bravo", "charlie"}, Top10("charlie bravo alpha"))
+	})
+
+	t.Run("2 returns only ten terms when unique terms are more than ten", func(t *testing.T) {
+		input := "l k j i h g f e d c b a"
+		expected := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("3 returns all terms when unique terms are exactly ten", func(t *testing.T) {
+		input := "j i h g f e d c b a"
+		expected := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("4 tokenizes correctly with tabs and new lines", func(t *testing.T) {
+		input := "foo\tbar\nfoo  baz\n\tbar"
+		expected := []string{"bar", "foo", "baz"}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("5 keeps punctuation inside tokens without normalization", func(t *testing.T) {
+		input := "dog,cat dog...cat dogcat dog,cat"
+		expected := []string{"dog,cat", "dog...cat", "dogcat"}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("6 deterministic on repeated calls with NATO Phonetic Alphabet words", func(t *testing.T) {
+		natoWords := strings.Join([]string{
+			"alpha bravo charlie delta echo foxtrot golf hotel india juliett kilo lima mike",
+			"november oscar papa quebec romeo sierra tango uniform victor whiskey x-ray yankee zulu",
+		}, " ")
+
+		input := strings.Join([]string{
+			natoWords,
+			"alpha alpha bravo bravo bravo zulu zulu x-ray x-ray x-ray",
+		}, " ")
+
+		baseline := Top10(input)
+		require.Equal(t, baseline, Top10(input))
+		require.Equal(t, baseline, Top10(input))
 	})
 }
