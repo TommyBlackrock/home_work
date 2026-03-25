@@ -172,10 +172,9 @@ func TestList_MoveToFront(t *testing.T) {
 		first := l.PushBack(1)
 		second := l.PushBack(2)
 		last := l.PushBack(3)
-
 		l.MoveToFront(last)
 		require.Equal(t, last, l.Front())
-		require.Equal(t, first, l.Back())
+		require.Equal(t, second, l.Back())
 		require.Equal(t, first, last.Next)
 		require.Equal(t, last, first.Prev)
 		require.Nil(t, last.Prev)
