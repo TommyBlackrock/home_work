@@ -73,6 +73,35 @@ func TestCache(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, 4, val)
 	})
+
+	t.Run("eviction by LRU", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aa", 1)
+		c.Set("bb", 2)
+		c.Set("cc", 3)
+
+		c.Get("aa")
+		newVal := 12
+		c.Set("bb", newVal)
+
+		c.Set("dd", 4) // добавляем новый – должен вытесниться c
+
+		_, ok := c.Get("c")
+		require.False(t, ok, "c should be evicted as LRU")
+
+		val, ok := c.Get("aa")
+		require.True(t, ok)
+		require.Equal(t, 1, val)
+
+		val, ok = c.Get("bb")
+		require.True(t, ok)
+		require.Equal(t, newVal, val)
+
+		val, ok = c.Get("dd")
+		require.True(t, ok)
+		require.Equal(t, 4, val)
+	})
 }
 
 func TestCacheMultithreading(t *testing.T) {
