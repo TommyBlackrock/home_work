@@ -89,7 +89,7 @@ func TestRunAdditional(t *testing.T) {
 		require.Equal(t, int32(tasksCount), runTasksCount)
 	})
 
-	t.Run("concurrency without time.Sleep (require.Eventually)", func(t *testing.T) {
+	t.Run("concurrency without time.Sleep", func(t *testing.T) {
 		const tasksCount = 100
 		tasks := make([]Task, 0, tasksCount)
 
@@ -123,5 +123,31 @@ func TestRunAdditional(t *testing.T) {
 		close(release)
 		err := <-errCh
 		require.NoError(t, err)
+	})
+
+	t.Run("tasks with panics", func(t *testing.T) {
+		tasksCount := 30
+		workersCount := 5
+		maxErrorsCount := 3
+		var runTasksCount int32
+		tasks := make([]Task, 0, tasksCount)
+
+		panicIndices := map[int]struct{}{0: {}, 1: {}, 2: {}}
+
+		for i := 0; i < tasksCount; i++ {
+			idx := i
+			tasks = append(tasks, func() error {
+				atomic.AddInt32(&runTasksCount, 1)
+				if _, ok := panicIndices[idx]; ok {
+					panic(fmt.Sprintf("panic at %d", idx))
+				}
+				return nil
+			})
+		}
+
+		err := Run(tasks, workersCount, maxErrorsCount)
+		require.Error(t, err)
+		require.Equal(t, ErrErrorsLimitExceeded, err)
+		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount))
 	})
 }
