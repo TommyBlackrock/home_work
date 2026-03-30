@@ -141,6 +141,9 @@ func TestRunAdditional(t *testing.T) {
 				if _, ok := panicIndices[idx]; ok {
 					panic(fmt.Sprintf("panic at %d", idx))
 				}
+				if idx >= 3 {
+					time.Sleep(20 * time.Millisecond)
+				}
 				return nil
 			})
 		}
