@@ -9,6 +9,15 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
+func executeTask(task Task, resultChan chan<- error) {
+	defer func() {
+		if r := recover(); r != nil {
+			resultChan <- errors.New("task panicked")
+		}
+	}()
+	resultChan <- task()
+}
+
 func Run(tasks []Task, n, m int) error {
 	if n <= 0 {
 		n = 1
@@ -28,7 +37,7 @@ func Run(tasks []Task, n, m int) error {
 		go func() {
 			defer wg.Done()
 			for task := range taskChan {
-				resultChan <- task()
+				executeTask(task, resultChan)
 			}
 		}()
 	}
