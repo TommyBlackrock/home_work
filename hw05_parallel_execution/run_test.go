@@ -68,3 +68,24 @@ func TestRun(t *testing.T) {
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
 }
+
+func TestRunAdditional(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	t.Run("m <= 0 ignores errors and runs all tasks", func(t *testing.T) {
+		tasksCount := 50
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				atomic.AddInt32(&runTasksCount, 1)
+				return fmt.Errorf("error on task")
+			})
+		}
+
+		err := Run(tasks, 5, 0)
+		require.NoError(t, err)
+		require.Equal(t, int32(tasksCount), runTasksCount)
+	})
+}
