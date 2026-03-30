@@ -88,4 +88,40 @@ func TestRunAdditional(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, int32(tasksCount), runTasksCount)
 	})
+
+	t.Run("concurrency without time.Sleep (require.Eventually)", func(t *testing.T) {
+		const tasksCount = 100
+		tasks := make([]Task, 0, tasksCount)
+
+		var current, maxConcurrency int32
+		release := make(chan struct{})
+
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				cur := atomic.AddInt32(&current, 1)
+				for {
+					old := atomic.LoadInt32(&maxConcurrency)
+					if cur <= old || atomic.CompareAndSwapInt32(&maxConcurrency, old, cur) {
+						break
+					}
+				}
+				<-release
+				atomic.AddInt32(&current, -1)
+				return nil
+			})
+		}
+
+		errCh := make(chan error, 1)
+		go func() {
+			errCh <- Run(tasks, 10, 1)
+		}()
+
+		require.Eventually(t, func() bool {
+			return atomic.LoadInt32(&maxConcurrency) >= 10
+		}, 2*time.Second, 20*time.Millisecond)
+
+		close(release)
+		err := <-errCh
+		require.NoError(t, err)
+	})
 }
