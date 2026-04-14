@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -47,7 +48,21 @@ func main() {
 	case errors.Is(err, ErrUnsupportedFile):
 		fmt.Fprintln(os.Stderr, "Error: only regular files are supported")
 	case errors.Is(err, os.ErrNotExist):
-		fmt.Fprintf(os.Stderr, "Error: source file %s does not exist\n", from)
+		var pathErr *os.PathError
+		if errors.As(err, &pathErr) && pathErr.Path == from {
+			fmt.Fprintf(os.Stderr, "Error: source file %s does not exist\n", from)
+			break
+		}
+		destPath := to
+		if errors.As(err, &pathErr) && pathErr.Path != "" {
+			destPath = pathErr.Path
+		}
+		destDir := filepath.Dir(destPath)
+		if _, statErr := os.Stat(destDir); errors.Is(statErr, os.ErrNotExist) {
+			fmt.Fprintf(os.Stderr, "Error: destination directory %s does not exist\n", destDir)
+			break
+		}
+		fmt.Fprintf(os.Stderr, "Error: destination path %s does not exist\n", to)
 	case errors.Is(err, os.ErrPermission):
 		fmt.Fprintf(os.Stderr, "Error: permission denied (reading %s or writing %s)\n", from, to)
 	default:
