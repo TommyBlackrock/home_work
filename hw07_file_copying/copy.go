@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/cheggaaa/pb/v3" //nolint:depguard
 )
 
 var (
@@ -69,7 +71,13 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return fmt.Errorf("seek to offset %d: %w", offset, err)
 	}
 
-	copied, err := io.CopyN(dst, src, bytesToCopy)
+	bar := pb.New64(bytesToCopy)
+	bar.Start()
+	defer bar.Finish()
+
+	progressReader := bar.NewProxyReader(src)
+
+	copied, err := io.CopyN(dst, progressReader, bytesToCopy)
 	if err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("copy data: %w", err)
 	}
