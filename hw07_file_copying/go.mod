@@ -1,6 +1,6 @@
 module github.com/fixme_my_friend/hw07_file_copying
 
-go 1.25.0
+go 1.23
 
 require (
 	github.com/TommyBlackrock/progressbar v0.1.0
