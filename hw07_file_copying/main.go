@@ -23,11 +23,11 @@ func init() {
 func main() {
 	flag.Parse()
 	if from == "" {
-		fmt.Println("Error: 'from' flag is required")
+		fmt.Fprintln(os.Stderr, "Error: 'from' flag is required")
 		os.Exit(1)
 	}
 	if to == "" {
-		fmt.Println("Error: 'to' flag is required")
+		fmt.Fprintln(os.Stderr, "Error: 'to' flag is required")
 		os.Exit(1)
 	}
 
@@ -47,6 +47,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Error: source and destination must be different files")
 	case errors.Is(err, ErrUnsupportedFile):
 		fmt.Fprintln(os.Stderr, "Error: only regular files are supported")
+	case errors.Is(err, ErrSourceChanged):
+		fmt.Fprintln(os.Stderr, "Error: source file changed during copying")
+	case errors.Is(err, ErrVerificationFailed):
+		fmt.Fprintln(os.Stderr, "Error: copied file verification failed")
 	case errors.Is(err, os.ErrNotExist):
 		var pathErr *os.PathError
 		if errors.As(err, &pathErr) && pathErr.Path == from {
