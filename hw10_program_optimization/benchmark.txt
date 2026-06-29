@@ -1,0 +1,20 @@
+benchstat old.txt new.txt
+goos: darwin
+goarch: arm64
+pkg: https://github.com/TommyBlackrock/home_work/tree/hw10_program_optimization
+cpu: Apple M4
+                 │    old.txt    │               new.txt               │
+                 │    sec/op     │   sec/op     vs base                │
+GetDomainStat-10   181.555m ± 4%   3.981m ± 7%  -97.81% (p=0.000 n=10)
+
+                 │   old.txt    │                 new.txt                  │
+                 │     B/s      │      B/s        vs base                  │
+GetDomainStat-10   91.27Mi ± 4%   4162.07Mi ± 6%  +4460.10% (p=0.000 n=10)
+
+                 │    old.txt     │               new.txt                │
+                 │      B/op      │     B/op      vs base                │
+GetDomainStat-10   264.772Mi ± 0%   1.309Mi ± 0%  -99.51% (p=0.000 n=10)
+
+                 │    old.txt     │               new.txt               │
+                 │   allocs/op    │  allocs/op   vs base                │
+GetDomainStat-10   3022.200k ± 0%   1.688k ± 0%  -99.94% (p=0.000 n=10)
