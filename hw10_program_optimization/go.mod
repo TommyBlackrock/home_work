@@ -2,7 +2,10 @@ module github.com/fixme_my_friend/hw10_program_optimization
 
 go 1.23
 
-require github.com/stretchr/testify v1.10.0
+require (
+	github.com/stretchr/testify v1.10.0
+	github.com/valyala/fastjson v1.6.4
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
