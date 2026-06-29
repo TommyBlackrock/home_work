@@ -9,17 +9,18 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/valyala/fastjson"
+	"github.com/valyala/fastjson" //nolint:depguard // Homework permits third-party JSON parsers.
 )
 
 const (
-	// 4pcs of workers
+	// 4pcs of workers.
 	domainStatWorkers = 4
 
-	// 512 lines pack
+	// 512 lines pack.
 	linesPerBatch = 512
 
-	// 8 reusable buffers so that the reader and worker can operate in parallel without allocating a new []byte for every string
+	// 8 reusable buffers so that the reader and worker can operate in parallel without allocating
+	// a new []byte for every string.
 	batchPoolSize       = domainStatWorkers * 2
 	batchInitialSize    = 128 * 1024
 	scannerInitialSize  = 4 * 1024
@@ -38,15 +39,15 @@ type User struct {
 
 type DomainStat map[string]int
 
-// lineBatch stores few JSON-strings in one contonuous buffer
-// firstLine for error message purpose
+// lineBatch stores few JSON-strings in one continuous buffer.
+// firstLine for error message purpose.
 type lineBatch struct {
 	data      []byte
 	firstLine int
 	lineCount int
 }
 
-// workerResult for specific worker
+// workerResult for specific worker.
 type workerResult struct {
 	stat DomainStat
 	err  *lineError
@@ -58,7 +59,7 @@ type lineError struct {
 }
 
 // domainCounter internals: key strings are created only on first occurrence
-// subsequent addresses increment the counter by index without a new allocation
+// subsequent addresses increment the counter by index without a new allocation.
 type domainCounter struct {
 	index   map[string]int
 	keys    []string
@@ -78,7 +79,7 @@ func newDomainCounter() *domainCounter {
 
 // GetDomainStat reads JSON Lines in a streaming manner and counts email domains ending with the given top-level domain.
 
-// Processing is structured as a pipeline
+// Processing is structured as a pipeline.
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	targetSuffix := []byte("." + strings.ToLower(domain))
 	// Scanner reads lines and collects them into reusable batches.
@@ -95,7 +96,6 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	workers.Add(domainStatWorkers)
 
 	for workerID := 0; workerID < domainStatWorkers; workerID++ {
-		workerID := workerID
 		go func() {
 			defer workers.Done()
 			runDomainWorker(jobs, freeBatches, targetSuffix, &results[workerID])
@@ -116,7 +116,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 }
 
 // produceBatches copies data from the Scanner into its own batch buffers
-// сopying is mandatory because the Scanner reuses memory after the next Scan call
+// сopying is mandatory because the Scanner reuses memory after the next Scan call.
 func produceBatches(
 	r io.Reader,
 	jobs chan<- *lineBatch,
@@ -222,7 +222,7 @@ func extractEmailDomain(email []byte) ([]byte, bool) {
 	return email[atIndex+1:], true
 }
 
-// hasDomainSuffix checks the TLD directly in the []byte. No domain string is created
+// hasDomainSuffix checks the TLD directly in the []byte. No domain string is created.
 func hasDomainSuffix(domain, targetSuffix []byte) bool {
 	if len(domain) < len(targetSuffix) {
 		return false
@@ -250,8 +250,7 @@ func (c *domainCounter) add(domain []byte) {
 	}
 
 	// Go compiler converts []byte to string when reading from the map without storing a temporary string
-	lookupKey := string(c.scratch)
-	if index, ok := c.index[lookupKey]; ok {
+	if index, ok := c.index[string(c.scratch)]; ok {
 		c.counts[index]++
 		return
 	}
