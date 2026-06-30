@@ -63,3 +63,57 @@ func TestTelnetClient(t *testing.T) {
 		wg.Wait()
 	})
 }
+
+func TestTelnetClientNotConnected(t *testing.T) {
+	client := NewTelnetClient(
+		"127.0.0.1:1",
+		time.Second,
+		io.NopCloser(bytes.NewReader(nil)),
+		io.Discard,
+	)
+
+	require.ErrorIs(t, client.Send(), ErrNotConnected)
+	require.ErrorIs(t, client.Receive(), ErrNotConnected)
+	require.NoError(t, client.Close())
+	require.NoError(t, client.Close())
+}
+
+func TestTelnetClientCloseUnblocksSend(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer func() { require.NoError(t, listener.Close()) }()
+
+	serverDone := make(chan error, 1)
+	go func() {
+		conn, acceptErr := listener.Accept()
+		if acceptErr != nil {
+			serverDone <- acceptErr
+			return
+		}
+
+		serverDone <- conn.Close()
+	}()
+
+	inputReader, inputWriter := io.Pipe()
+	defer func() { require.NoError(t, inputWriter.Close()) }()
+
+	client := NewTelnetClient(listener.Addr().String(), time.Second, inputReader, io.Discard)
+	require.NoError(t, client.Connect())
+
+	sendDone := make(chan error, 1)
+	go func() {
+		sendDone <- client.Send()
+	}()
+
+	require.NoError(t, client.Receive())
+	require.NoError(t, client.Close())
+
+	select {
+	case sendErr := <-sendDone:
+		require.Error(t, sendErr)
+	case <-time.After(time.Second):
+		t.Fatal("Send did not stop after client Close")
+	}
+
+	require.NoError(t, <-serverDone)
+}
